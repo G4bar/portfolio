@@ -130,6 +130,7 @@ ul {
 }
 
 .cta-link {
+  display: inline-block;
   font-size: 16px;
   font-weight: 600;
   line-height: 1.5;
@@ -137,6 +138,13 @@ ul {
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
+  transition-property: scale, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+.cta-link:active {
+  scale: 0.96;
 }
 
 .section {
