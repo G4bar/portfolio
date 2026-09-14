@@ -29,6 +29,15 @@
     };
   }
 
+  const DOT_VARS = {
+    "dot-available": "--dot-available",
+    "dot-about": "--dot-about",
+    "dot-work": "--dot-work",
+    "dot-skills": "--dot-skills",
+    "dot-education": "--dot-education",
+    "dot-contact": "--dot-contact",
+  };
+
   function contentBounds() {
     const page = document.querySelector(".page");
     const rect = page.getBoundingClientRect();
@@ -38,6 +47,55 @@
       left: rect.left + parseFloat(styles.paddingLeft) - GAP,
       right: rect.right - parseFloat(styles.paddingRight) + GAP,
     };
+  }
+
+  function sectionBands() {
+    const root = getComputedStyle(document.documentElement);
+    const blocks = document.querySelectorAll(".hero, .section");
+    const bands = [];
+
+    for (const block of blocks) {
+      const dot = block.querySelector(".dot");
+      if (!dot) continue;
+
+      let varName = null;
+      for (const cls of dot.classList) {
+        if (DOT_VARS[cls]) {
+          varName = DOT_VARS[cls];
+          break;
+        }
+      }
+      if (!varName) continue;
+
+      const rect = block.getBoundingClientRect();
+      bands.push({
+        top: rect.top,
+        bottom: rect.bottom,
+        color: parseHex(root.getPropertyValue(varName)),
+      });
+    }
+
+    return bands;
+  }
+
+  function colorForY(y, bands) {
+    for (const band of bands) {
+      if (y >= band.top && y < band.bottom) {
+        return band.color;
+      }
+    }
+
+    let best = bands[0];
+    let bestDist = Infinity;
+    for (const band of bands) {
+      const mid = (band.top + band.bottom) / 2;
+      const dist = Math.abs(y - mid);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = band;
+      }
+    }
+    return best.color;
   }
 
   function resize() {
@@ -68,9 +126,7 @@
     clear();
 
     const bounds = contentBounds();
-    const color = parseHex(
-      getComputedStyle(document.documentElement).getPropertyValue("--secondary"),
-    );
+    const bands = sectionBands();
     ctx.font = "11px 'IBM Plex Mono', monospace";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -96,6 +152,7 @@
         const alpha = falloff * falloff * 0.72;
         if (alpha < 0.04) continue;
 
+        const color = colorForY(y, bands);
         ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
         ctx.fillText(GLYPHS[seed % GLYPHS.length], x, y);
       }
